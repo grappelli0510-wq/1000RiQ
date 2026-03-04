@@ -1,6 +1,6 @@
 /**
  * 侘びの環境音 ─ Web Audio API
- * 風のささやき、水滴、ししおどしを生成
+ * 風のささやき、水滴、小鳥のさえずりを生成
  */
 class WabiAmbient {
     constructor() {
@@ -8,14 +8,28 @@ class WabiAmbient {
         this.isPlaying = false;
         this.masterGain = null;
         this.nodes = [];
+        this.timers = []; // setTimeoutのIDを追跡
     }
 
     init() {
-        if (this.ctx) return;
+        if (this.ctx && this.ctx.state !== 'closed') return;
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = 0;
         this.masterGain.connect(this.ctx.destination);
+    }
+
+    // タイマーを安全に登録
+    _setTimeout(fn, delay) {
+        const id = setTimeout(fn, delay);
+        this.timers.push(id);
+        return id;
+    }
+
+    // 全タイマーをクリア
+    _clearAllTimers() {
+        this.timers.forEach(id => clearTimeout(id));
+        this.timers = [];
     }
 
     // 風のささやき ─ 柔らかいフィルタリングノイズ
@@ -73,7 +87,7 @@ class WabiAmbient {
     // 水滴 ─ 蹲踞の水音（柔らかく丸い音）
     createWaterDrop() {
         const drop = () => {
-            if (!this.isPlaying) return;
+            if (!this.isPlaying || !this.ctx || this.ctx.state === 'closed') return;
 
             const now = this.ctx.currentTime;
 
@@ -105,80 +119,81 @@ class WabiAmbient {
 
             // 次の水滴（不規則な間隔、もっと間を空ける）
             const nextDrop = 4000 + Math.random() * 10000;
-            setTimeout(drop, nextDrop);
+            this._setTimeout(drop, nextDrop);
         };
 
-        setTimeout(drop, 3000 + Math.random() * 5000);
+        this._setTimeout(drop, 3000 + Math.random() * 5000);
     }
 
-    // ししおどし ─ 竹が石を打つ「コーン」という音
-    createShishiodoshi() {
-        const knock = () => {
-            if (!this.isPlaying) return;
+    // 小鳥のさえずり ─ 高い周波数で短い音符を連続
+    createBirdChirp() {
+        const chirp = () => {
+            if (!this.isPlaying || !this.ctx || this.ctx.state === 'closed') return;
 
             const now = this.ctx.currentTime;
 
-            // 竹が石を打つ「コーン」音 ─ 2つのオシレーターで構成
-            // 1. アタック（高い衝撃音）
-            const attack = this.ctx.createOscillator();
-            const attackGain = this.ctx.createGain();
-            attack.frequency.setValueAtTime(800, now);
-            attack.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-            attack.type = 'triangle';
-            attackGain.gain.setValueAtTime(0.25, now);
-            attackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-            attack.connect(attackGain);
-            attackGain.connect(this.masterGain);
-            attack.start(now);
-            attack.stop(now + 0.15);
+            // 1回のさえずり = 2〜5回の短い音符の連続
+            const noteCount = 2 + Math.floor(Math.random() * 4);
+            const baseFreq = 2000 + Math.random() * 2000; // 2000〜4000Hz
 
-            // 2. 残響（低い木の響き）
-            const body = this.ctx.createOscillator();
-            const bodyGain = this.ctx.createGain();
-            body.frequency.setValueAtTime(180, now + 0.01);
-            body.frequency.exponentialRampToValueAtTime(80, now + 0.5);
-            body.type = 'sine';
-            bodyGain.gain.setValueAtTime(0.18, now + 0.01);
-            bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+            for (let i = 0; i < noteCount; i++) {
+                const noteTime = now + i * (0.06 + Math.random() * 0.08);
+                const freq = baseFreq + (Math.random() - 0.5) * 800;
 
-            const bodyFilter = this.ctx.createBiquadFilter();
-            bodyFilter.type = 'lowpass';
-            bodyFilter.frequency.value = 400;
+                // メインのさえずり音
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
 
-            body.connect(bodyFilter);
-            bodyFilter.connect(bodyGain);
-            bodyGain.connect(this.masterGain);
-            body.start(now + 0.01);
-            body.stop(now + 1.0);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, noteTime);
+                // 上がる鳴き声、または下がる鳴き声
+                const freqEnd = freq + (Math.random() > 0.5 ? 1 : -1) * (200 + Math.random() * 600);
+                osc.frequency.exponentialRampToValueAtTime(
+                    Math.max(freqEnd, 500), noteTime + 0.05 + Math.random() * 0.04
+                );
 
-            // 3. ノイズ成分（衝撃のバリバリ感）
-            const noiseLen = this.ctx.sampleRate * 0.05;
-            const noiseBuf = this.ctx.createBuffer(1, noiseLen, this.ctx.sampleRate);
-            const noiseData = noiseBuf.getChannelData(0);
-            for (let i = 0; i < noiseLen; i++) {
-                noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (noiseLen * 0.2));
+                const vol = 0.015 + Math.random() * 0.01;
+                gain.gain.setValueAtTime(0, noteTime);
+                gain.gain.linearRampToValueAtTime(vol, noteTime + 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.08 + Math.random() * 0.04);
+
+                // 倍音を加えてリアルに
+                const osc2 = this.ctx.createOscillator();
+                const gain2 = this.ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(freq * 2, noteTime);
+                osc2.frequency.exponentialRampToValueAtTime(
+                    Math.max(freqEnd * 2, 1000), noteTime + 0.05 + Math.random() * 0.04
+                );
+                gain2.gain.setValueAtTime(0, noteTime);
+                gain2.gain.linearRampToValueAtTime(vol * 0.3, noteTime + 0.005);
+                gain2.gain.exponentialRampToValueAtTime(0.0001, noteTime + 0.06);
+
+                // バンドパスフィルタで自然な鳥の声に
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = freq;
+                filter.Q.value = 5;
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(noteTime);
+                osc.stop(noteTime + 0.15);
+
+                osc2.connect(gain2);
+                gain2.connect(this.masterGain);
+                osc2.start(noteTime);
+                osc2.stop(noteTime + 0.12);
             }
-            const noise = this.ctx.createBufferSource();
-            noise.buffer = noiseBuf;
-            const noiseGain = this.ctx.createGain();
-            noiseGain.gain.setValueAtTime(0.08, now);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-            const noiseFilter = this.ctx.createBiquadFilter();
-            noiseFilter.type = 'bandpass';
-            noiseFilter.frequency.value = 500;
-            noiseFilter.Q.value = 2;
-            noise.connect(noiseFilter);
-            noiseFilter.connect(noiseGain);
-            noiseGain.connect(this.masterGain);
-            noise.start(now);
 
-            // 次のししおどし（15〜35秒間隔）
-            const nextKnock = 15000 + Math.random() * 20000;
-            setTimeout(knock, nextKnock);
+            // 次のさえずり（5〜20秒間隔 ─ 静けさを大切に）
+            const nextChirp = 5000 + Math.random() * 15000;
+            this._setTimeout(chirp, nextChirp);
         };
 
-        // 最初は8秒後
-        setTimeout(knock, 8000);
+        // 最初は4秒後
+        this._setTimeout(chirp, 4000 + Math.random() * 3000);
     }
 
     start() {
@@ -192,37 +207,46 @@ class WabiAmbient {
 
         this.createWind();
         this.createWaterDrop();
-        this.createShishiodoshi();
+        this.createBirdChirp();
     }
 
     stop() {
         if (!this.isPlaying) return;
         this.isPlaying = false;
 
+        // 全タイマーを即座にクリア（新しい音のスケジューリングを停止）
+        this._clearAllTimers();
+
         // フェードアウト
-        if (this.masterGain) {
-            this.masterGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 2);
+        if (this.masterGain && this.ctx && this.ctx.state !== 'closed') {
+            const now = this.ctx.currentTime;
+            this.masterGain.gain.cancelScheduledValues(now);
+            this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+            this.masterGain.gain.linearRampToValueAtTime(0, now + 1.5);
         }
 
+        // フェードアウト完了後にクリーンアップ
         setTimeout(() => {
             this.nodes.forEach(node => {
                 try { node.stop(); } catch (e) { }
             });
             this.nodes = [];
-            if (this.ctx) {
-                this.ctx.close();
+            if (this.ctx && this.ctx.state !== 'closed') {
+                this.ctx.close().catch(() => {});
                 this.ctx = null;
+                this.masterGain = null;
             }
-        }, 2500);
+        }, 2000);
     }
 
     toggle() {
         if (this.isPlaying) {
             this.stop();
+            return false;
         } else {
             this.start();
+            return true;
         }
-        return this.isPlaying;
     }
 }
 

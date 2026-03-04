@@ -1802,6 +1802,12 @@
             this.classList.toggle('playing', playing);
             this.querySelector('.ambient-icon').textContent = playing ? '🔊' : '🍃';
             this.title = playing ? '環境音を停止' : '侘びの環境音';
+            // 停止時にボタンの見た目を確実にリセット
+            if (!playing) {
+                setTimeout(() => {
+                    this.classList.remove('playing');
+                }, 100);
+            }
         });
     </script>
 </body>
