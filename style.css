@@ -1,0 +1,1089 @@
+/* ============================================
+   千利休 ─ 侘びの極致を求めた茶聖
+   和風ウェブブック スタイルシート
+   ============================================ */
+
+/* --- カスタムプロパティ --- */
+:root {
+    --color-sumi: #1a1a1a;
+    --color-sumi-light: #2d2d2d;
+    --color-sumi-mid: #4a4a4a;
+    --color-washi: #f5f0e8;
+    --color-washi-dark: #e8e0d0;
+    --color-washi-warm: #f0e6d3;
+    --color-gold: #c4a44a;
+    --color-gold-light: #d4b85a;
+    --color-gold-dark: #8a7030;
+    --color-beni: #a0333a;
+    --color-beni-dark: #7a2028;
+    --color-matcha: #5a7a4a;
+    --color-matcha-dark: #3a5a2a;
+    --color-ai: #264e6e;
+    --color-murasaki: #5a3a5a;
+
+    --font-mincho: 'Shippori Mincho', 'Noto Serif JP', 'Yu Mincho', '游明朝', serif;
+    --font-mincho-old: 'Zen Old Mincho', 'Noto Serif JP', serif;
+
+    --page-max-width: 900px;
+    --content-padding: clamp(1.5rem, 5vw, 4rem);
+}
+
+/* --- リセットと基本設定 --- */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: var(--font-mincho);
+    background-color: var(--color-sumi);
+    color: var(--color-sumi);
+    line-height: 1.95;
+    letter-spacing: 0.08em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+    background-color: var(--color-gold);
+    color: var(--color-washi);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* --- 読み込み画面 --- */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-sumi);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s ease, visibility 1s ease;
+}
+
+#loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-brush {
+    width: 2px;
+    height: 60px;
+    background: var(--color-washi);
+    margin: 0 auto 2rem;
+    position: relative;
+    animation: brushStroke 1.5s ease-in-out infinite;
+}
+
+.loading-brush::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-washi);
+    opacity: 0.6;
+    animation: inkDrop 1.5s ease-in-out infinite 0.5s;
+}
+
+@keyframes brushStroke {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: rotate(5deg);
+        opacity: 1;
+    }
+}
+
+@keyframes inkDrop {
+    0% {
+        transform: translateX(-50%) scale(0);
+        opacity: 0;
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: translateX(-50%) scale(2);
+        opacity: 0;
+    }
+}
+
+.loading-text {
+    color: var(--color-washi);
+    font-family: var(--font-mincho-old);
+    font-size: 1.1rem;
+    letter-spacing: 1em;
+    opacity: 0.7;
+    animation: fadeInOut 2s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.9;
+    }
+}
+
+/* --- ナビゲーション --- */
+#book-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    padding: 1.5rem;
+}
+
+#nav-toggle {
+    background: rgba(26, 26, 26, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(196, 164, 74, 0.3);
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+#nav-toggle:hover {
+    background: rgba(26, 26, 26, 0.9);
+    border-color: var(--color-gold);
+}
+
+#nav-toggle span {
+    display: block;
+    width: 20px;
+    height: 1.5px;
+    background: var(--color-washi);
+    transition: all 0.3s ease;
+}
+
+#nav-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translateY(6.5px);
+}
+
+#nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+#nav-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translateY(-6.5px);
+}
+
+#nav-menu {
+    position: absolute;
+    top: 70px;
+    left: 1.5rem;
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(196, 164, 74, 0.3);
+    border-radius: 6px;
+    padding: 2rem;
+    min-width: 300px;
+    transform: translateY(-10px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#nav-menu.open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+#nav-menu h3 {
+    color: var(--color-gold);
+    font-family: var(--font-mincho-old);
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.8em;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(196, 164, 74, 0.3);
+}
+
+#nav-menu ul {
+    list-style: none;
+}
+
+#nav-menu li {
+    margin-bottom: 0.3rem;
+}
+
+#nav-menu a {
+    display: block;
+    padding: 0.5rem 0.8rem;
+    color: var(--color-washi);
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+#nav-menu a:hover,
+#nav-menu a.active {
+    opacity: 1;
+    background: rgba(196, 164, 74, 0.1);
+    color: var(--color-gold-light);
+}
+
+/* --- ページ送りボタン --- */
+.page-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 900;
+    background: rgba(26, 26, 26, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(196, 164, 74, 0.2);
+    color: var(--color-washi);
+    width: 44px;
+    height: 80px;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover {
+    background: rgba(26, 26, 26, 0.8);
+    border-color: var(--color-gold);
+    opacity: 1 !important;
+}
+
+.page-btn.visible {
+    opacity: 0.5;
+}
+
+#prev-page {
+    left: 1rem;
+}
+
+#next-page {
+    right: 1rem;
+}
+
+/* --- 進捗バー --- */
+#progress-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(26, 26, 26, 0.3);
+    z-index: 900;
+}
+
+#progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-gold-dark), var(--color-gold), var(--color-gold-light));
+    transition: width 0.4s ease;
+}
+
+/* --- 書籍本体 --- */
+#book {
+    width: 100%;
+}
+
+/* --- ページ共通 --- */
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- 表紙 --- */
+.cover-page {
+    background: var(--color-sumi);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.cover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+}
+
+.cover-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 600px;
+    animation: coverFadeIn 2s ease-out;
+}
+
+@keyframes coverFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cover-decoration {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-color: var(--color-gold-dark);
+    opacity: 0.5;
+}
+
+.cover-decoration.top-left {
+    top: -20px;
+    left: -20px;
+    border-top: 1px solid;
+    border-left: 1px solid;
+}
+
+.cover-decoration.top-right {
+    top: -20px;
+    right: -20px;
+    border-top: 1px solid;
+    border-right: 1px solid;
+}
+
+.cover-decoration.bottom-left {
+    bottom: -20px;
+    left: -20px;
+    border-bottom: 1px solid;
+    border-left: 1px solid;
+}
+
+.cover-decoration.bottom-right {
+    bottom: -20px;
+    right: -20px;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+
+.cover-title {
+    margin-bottom: 2.5rem;
+}
+
+.title-sub {
+    display: block;
+    font-family: var(--font-mincho-old);
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 400;
+    color: var(--color-gold);
+    letter-spacing: 0.5em;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.title-main {
+    display: block;
+    font-family: var(--font-mincho-old);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    color: var(--color-washi);
+    letter-spacing: 0.3em;
+    line-height: 1.3;
+    text-shadow: 0 0 60px rgba(196, 164, 74, 0.15);
+}
+
+.cover-image-wrapper {
+    width: clamp(200px, 50vw, 320px);
+    margin: 0 auto 2.5rem;
+    position: relative;
+}
+
+.cover-image-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border: 1px solid rgba(196, 164, 74, 0.2);
+    border-radius: 2px;
+}
+
+.cover-image {
+    width: 100%;
+    border-radius: 2px;
+    filter: contrast(1.1) brightness(0.95);
+    transition: filter 0.6s ease;
+}
+
+.cover-image:hover {
+    filter: contrast(1.15) brightness(1);
+}
+
+.cover-subtitle {
+    font-family: var(--font-mincho-old);
+    font-size: clamp(0.8rem, 1.5vw, 0.95rem);
+    color: var(--color-washi);
+    letter-spacing: 0.4em;
+    opacity: 0.5;
+    margin-bottom: 2rem;
+}
+
+.cover-scroll-hint {
+    font-size: 0.75rem;
+    color: var(--color-washi);
+    opacity: 0.3;
+    letter-spacing: 0.3em;
+    animation: hintPulse 2s ease-in-out infinite;
+    margin-top: 2rem;
+}
+
+@keyframes hintPulse {
+
+    0%,
+    100% {
+        opacity: 0.15;
+        transform: translateY(0);
+    }
+
+    50% {
+        opacity: 0.4;
+        transform: translateY(5px);
+    }
+}
+
+/* --- 章ページ --- */
+.chapter-page {
+    background: var(--color-washi);
+    padding: 0;
+}
+
+/* 和紙テクスチャのオーバーレイ */
+.chapter-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 3px,
+            rgba(0, 0, 0, 0.008) 3px,
+            rgba(0, 0, 0, 0.008) 4px),
+        repeating-linear-gradient(90deg,
+            transparent,
+            transparent 5px,
+            rgba(0, 0, 0, 0.005) 5px,
+            rgba(0, 0, 0, 0.005) 6px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ページの端のシャドウ */
+.chapter-page::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30px;
+    height: 100%;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.06), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* --- 章ヘッダー --- */
+.chapter-header {
+    padding: clamp(3rem, 8vh, 6rem) var(--content-padding) 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.chapter-number {
+    display: inline-block;
+    font-family: var(--font-mincho-old);
+    font-size: 0.85rem;
+    color: var(--color-gold-dark);
+    letter-spacing: 0.6em;
+    margin-bottom: 0.8rem;
+    opacity: 0.7;
+}
+
+.chapter-title {
+    font-family: var(--font-mincho-old);
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 700;
+    color: var(--color-sumi);
+    letter-spacing: 0.25em;
+    line-height: 1.4;
+    margin-bottom: 1.5rem;
+}
+
+.chapter-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+    margin: 0 auto;
+}
+
+/* --- 章本体 --- */
+.chapter-body {
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+    padding: 1rem var(--content-padding) clamp(3rem, 8vh, 6rem);
+    position: relative;
+    z-index: 2;
+}
+
+/* --- 画像ブロック --- */
+.image-block {
+    margin: 1.5rem 0 2.5rem;
+    text-align: center;
+}
+
+.chapter-image {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    margin: 0 auto;
+    border-radius: 2px;
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+
+.chapter-image:hover {
+    transform: scale(1.02);
+    box-shadow:
+        0 8px 40px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.image-caption {
+    font-size: 0.8rem;
+    color: var(--color-sumi-mid);
+    letter-spacing: 0.3em;
+    margin-top: 0.8rem;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+/* --- テキストブロック --- */
+.text-block {
+    font-size: clamp(0.95rem, 1.8vw, 1.05rem);
+    color: var(--color-sumi-light);
+}
+
+.text-block p {
+    margin-bottom: 1.5em;
+    text-align: justify;
+    text-indent: 1em;
+}
+
+.first-paragraph {
+    text-indent: 0 !important;
+}
+
+/* ドロップキャップ */
+.drop-cap {
+    float: left;
+    font-family: var(--font-mincho-old);
+    font-size: 3.5em;
+    line-height: 0.85;
+    padding-right: 0.1em;
+    padding-top: 0.08em;
+    color: var(--color-sumi);
+    font-weight: 700;
+}
+
+/* --- セクション見出し --- */
+.section-heading {
+    font-family: var(--font-mincho-old);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-sumi);
+    letter-spacing: 0.2em;
+    margin-top: 2.5em;
+    margin-bottom: 1em;
+    padding-left: 1em;
+    position: relative;
+}
+
+.section-heading::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 1.2em;
+    background: linear-gradient(to bottom, var(--color-gold), var(--color-gold-dark));
+    border-radius: 2px;
+}
+
+/* --- 和敬清寂グリッド --- */
+.philosophy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.2rem;
+    margin: 2rem 0;
+    padding: 0;
+}
+
+.philosophy-item {
+    background: rgba(26, 26, 26, 0.03);
+    border: 1px solid rgba(196, 164, 74, 0.2);
+    border-radius: 4px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.philosophy-item:hover {
+    background: rgba(196, 164, 74, 0.06);
+    border-color: var(--color-gold);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.philosophy-kanji {
+    display: block;
+    font-family: var(--font-mincho-old);
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--color-sumi);
+    line-height: 1;
+    margin-bottom: 0.8rem;
+}
+
+.philosophy-desc {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--color-sumi-mid);
+    line-height: 1.7;
+    letter-spacing: 0.05em;
+    text-indent: 0;
+}
+
+/* --- 引用 --- */
+.rikyu-quote {
+    margin: 2.5rem 0;
+    padding: 2rem 2.5rem;
+    position: relative;
+    background: rgba(26, 26, 26, 0.02);
+    border-left: 3px solid var(--color-gold);
+}
+
+.rikyu-quote::before {
+    content: '「';
+    position: absolute;
+    top: 0.5rem;
+    left: 0.8rem;
+    font-family: var(--font-mincho-old);
+    font-size: 2.5rem;
+    color: var(--color-gold);
+    opacity: 0.3;
+    line-height: 1;
+}
+
+.rikyu-quote p {
+    text-indent: 0 !important;
+    margin-bottom: 0.3em !important;
+    font-family: var(--font-mincho-old);
+    font-size: 1.05rem;
+    color: var(--color-sumi);
+    letter-spacing: 0.15em;
+    text-align: left;
+}
+
+.rikyu-quote cite {
+    display: block;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--color-gold-dark);
+    letter-spacing: 0.2em;
+    text-align: right;
+    font-style: normal;
+}
+
+.final-quote {
+    border-left-color: var(--color-beni);
+    text-align: center;
+    background: rgba(160, 51, 58, 0.03);
+}
+
+.final-quote p {
+    text-align: center !important;
+    font-size: 1.15rem;
+    letter-spacing: 0.25em;
+}
+
+/* --- 閉じのテキスト --- */
+.closing-text {
+    font-family: var(--font-mincho-old);
+    font-size: 1.05rem;
+    color: var(--color-sumi);
+    text-align: center !important;
+    text-indent: 0 !important;
+    letter-spacing: 0.12em;
+    line-height: 2.2;
+    margin-top: 2rem;
+    opacity: 0.8;
+}
+
+/* --- 奥付ページ --- */
+.colophon-page {
+    background: var(--color-washi-warm);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.colophon-content {
+    max-width: 500px;
+    width: 100%;
+}
+
+.colophon-border {
+    border: 1px solid var(--color-sumi-mid);
+    padding: clamp(2rem, 5vw, 3.5rem);
+    position: relative;
+    text-align: center;
+    background: rgba(245, 240, 232, 0.5);
+}
+
+.colophon-border::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(74, 74, 74, 0.3);
+    pointer-events: none;
+}
+
+.colophon-content h2 {
+    font-family: var(--font-mincho-old);
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--color-sumi);
+    letter-spacing: 1em;
+    margin-bottom: 1.5rem;
+}
+
+.colophon-divider {
+    width: 40px;
+    height: 1px;
+    background: var(--color-sumi-mid);
+    margin: 1.5rem auto;
+    opacity: 0.5;
+}
+
+.colophon-info {
+    text-align: left;
+    margin: 1.5rem 0;
+}
+
+.colophon-info dt {
+    font-size: 0.75rem;
+    color: var(--color-sumi-mid);
+    letter-spacing: 0.3em;
+    margin-bottom: 0.2rem;
+    margin-top: 1rem;
+}
+
+.colophon-info dt:first-child {
+    margin-top: 0;
+}
+
+.colophon-info dd {
+    font-size: 0.9rem;
+    color: var(--color-sumi);
+    letter-spacing: 0.1em;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.colophon-note {
+    font-size: 0.75rem;
+    color: var(--color-sumi-mid);
+    line-height: 1.9;
+    letter-spacing: 0.05em;
+}
+
+.colophon-seal {
+    display: inline-block;
+    margin-top: 2rem;
+    width: 56px;
+    height: 56px;
+    border: 2px solid var(--color-beni);
+    color: var(--color-beni);
+    font-family: var(--font-mincho-old);
+    font-size: 1.3rem;
+    font-weight: 900;
+    line-height: 52px;
+    text-align: center;
+    letter-spacing: 0;
+    transform: rotate(-5deg);
+    opacity: 0.7;
+    border-radius: 2px;
+}
+
+/* --- スクロールアニメーション --- */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.fade-in-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fade-in-up.delay-1 {
+    transition-delay: 0.15s;
+}
+
+.fade-in-up.delay-2 {
+    transition-delay: 0.3s;
+}
+
+.fade-in-up.delay-3 {
+    transition-delay: 0.45s;
+}
+
+/* --- レスポンシブ --- */
+@media (max-width: 768px) {
+    :root {
+        --content-padding: 1.5rem;
+    }
+
+    .page-btn {
+        width: 36px;
+        height: 60px;
+        font-size: 1rem;
+    }
+
+    #prev-page {
+        left: 0.3rem;
+    }
+
+    #next-page {
+        right: 0.3rem;
+    }
+
+    .chapter-image {
+        max-height: 280px;
+    }
+
+    .drop-cap {
+        font-size: 2.8em;
+    }
+
+    .philosophy-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+
+    .philosophy-item {
+        padding: 1rem 0.8rem;
+    }
+
+    .philosophy-kanji {
+        font-size: 2rem;
+    }
+
+    .rikyu-quote {
+        padding: 1.5rem 1.5rem 1.5rem 2rem;
+    }
+
+    #nav-menu {
+        min-width: 260px;
+    }
+
+    .title-main {
+        letter-spacing: 0.15em;
+    }
+}
+
+@media (max-width: 480px) {
+    .philosophy-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .colophon-border {
+        padding: 1.5rem;
+    }
+
+    .cover-decoration {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* --- 印刷用スタイル --- */
+@media print {
+
+    #book-nav,
+    .page-btn,
+    #progress-bar,
+    #loading-screen,
+    .cover-scroll-hint {
+        display: none !important;
+    }
+
+    .page {
+        min-height: auto;
+        page-break-after: always;
+    }
+
+    .cover-page {
+        background: white;
+    }
+
+    .title-main {
+        color: black;
+    }
+
+    .title-sub,
+    .cover-subtitle {
+        color: #333;
+    }
+
+    body {
+        background: white;
+    }
+}
+
+/* --- スクロールバー --- */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-sumi);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-sumi-mid);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold-dark);
+}
+
+/* --- 環境音ボタン --- */
+.ambient-btn {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 1000;
+    background: rgba(26, 26, 26, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(196, 164, 74, 0.3);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+    gap: 1px;
+}
+
+.ambient-btn:hover {
+    background: rgba(26, 26, 26, 0.9);
+    border-color: var(--color-gold);
+    transform: scale(1.1);
+}
+
+.ambient-btn .ambient-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.ambient-btn .ambient-label {
+    font-size: 0.55rem;
+    color: var(--color-washi);
+    opacity: 0.6;
+    letter-spacing: 0.1em;
+    font-family: var(--font-mincho);
+}
+
+.ambient-btn.playing {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 15px rgba(196, 164, 74, 0.3);
+    animation: ambientGlow 3s ease-in-out infinite;
+}
+
+@keyframes ambientGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(196, 164, 74, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(196, 164, 74, 0.4);
+    }
+}
